@@ -7,3 +7,5 @@ Ktor 기반의 RESTful 백엔드 서버입니다.
 - 회원가입 (`/register`)
 - 로그인 (`/login`)
 - 게시물 등록 (`/post`)
+
+### client branch에 클라이언트 예시 코드 있습니다.
