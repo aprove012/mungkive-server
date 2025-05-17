@@ -75,3 +75,4 @@ plugins {
 
 ## 참고
 - Retrofit 설정 시 `Kotlinx Serialization` 사용
+- 아이디와 패스워드 입력 후 회원가입 눌러야 아이디 저장됩니다.
