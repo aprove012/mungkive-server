@@ -24,7 +24,7 @@ Ktor 기반의 RESTful 백엔드 서버입니다.
   ```
     post("/login") {
         val request = call.receive<AuthRequest>() // 해당되는 데이터 클래스로 통신시작 
-        val valid = UserRepository.validateUser(request.id, request.password) // DatabaseFactroy의 함수를 통해 SQL 연결
+        val valid = UserRepository.validateUser(request.id, request.password) // user.kt의 함수를 통해 SQL 연결
         if (valid) {
             val token = JwtConfig.generateToken(request.id)
             call.respond(HttpStatusCode.OK, AuthResponse(token)) // 로그인 성공 시 토큰 생성
