@@ -8,6 +8,8 @@ Ktor 기반의 RESTful 백엔드 서버입니다.
 - 회원가입 (`/register`)
 - 로그인 (`/login`)
 - 게시물 등록 (`/post`)
+- 게시물 가져오기 (`/posts`)
+- 내 게시물만 가져오기 (`/posts/mypost')
 
 ## 코드 설명
 - Route.kt
