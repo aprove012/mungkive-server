@@ -27,8 +27,9 @@ object DatabaseFactory {
                 CREATE TABLE IF NOT EXISTS posts (
                     id       INTEGER PRIMARY KEY AUTOINCREMENT,
                     userId   TEXT NOT NULL,
-                    title    TEXT NOT NULL,
-                    content  TEXT NOT NULL
+                    content  TEXT NOT NULL,
+                    picture  TEXT NOT NULL,
+                    locate TEXT NOT NULL
                 );
                 """
             )

@@ -1,5 +1,7 @@
 package com.example.server
 
+import com.example.server.server.PostResponse
+
 object UserRepository {
 
     /** 새 사용자 등록 – 이미 존재하면 false */
@@ -35,15 +37,55 @@ object UserRepository {
             it.executeQuery().next()
         }
 
-    fun createPost(userId: String, title: String, content: String): Boolean {
+    fun createPost(userId: String, content: String, picture: String, locate:String): Boolean {
         val rows = DatabaseFactory.statement(
-            "INSERT INTO posts(userId, title, content) VALUES (?, ?, ?)"
+            "INSERT INTO posts(userId, content, picture, locate) VALUES (?, ?, ?, ?)"
         ) {
             it.setString(1, userId)
-            it.setString(2, title)
-            it.setString(3, content)
+            it.setString(2, content)
+            it.setString(3, picture)
+            it.setString(4, locate)
             it.executeUpdate()
         }
         return rows == 1
+    }
+
+    fun getAllPosts(): List<PostResponse> {
+        return DatabaseFactory.statement("SELECT * FROM posts") { stmt ->
+            val rs = stmt.executeQuery()
+            val result = mutableListOf<PostResponse>()
+            while (rs.next()) {
+                result.add(
+                    PostResponse(
+                        id = rs.getInt("id"),
+                        userId = rs.getString("userId"),
+                        content = rs.getString("content"),
+                        picture = rs.getString("picture"),
+                        locate = rs.getString("locate")
+                    )
+                )
+            }
+            result
+        }
+    }
+
+    fun getUserPosts(userId: String): List<PostResponse> {
+        return DatabaseFactory.statement("SELECT * FROM posts WHERE userId = ?") { stmt ->
+            stmt.setString(1, userId)
+            val rs = stmt.executeQuery()
+            val result = mutableListOf<PostResponse>()
+            while (rs.next()) {
+                result.add(
+                    PostResponse(
+                        id = rs.getInt("id"),
+                        userId = rs.getString("userId"),
+                        content = rs.getString("content"),
+                        picture = rs.getString("picture"),
+                        locate = rs.getString("locate")
+                    )
+                )
+            }
+            result
+        }
     }
 }
