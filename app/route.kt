@@ -1,5 +1,9 @@
 package com.example.server
 
+import com.example.server.server.AuthRequest
+import com.example.server.server.AuthResponse
+import com.example.server.server.MypageResponse
+import com.example.server.server.PostRequest
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.ktor.server.request.*
@@ -8,15 +12,6 @@ import io.ktor.http.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.JWTPrincipal
 import kotlinx.serialization.Serializable
-
-@Serializable
-data class AuthRequest(val id: String, val password: String)
-@Serializable
-data class AuthResponse(val token: String)
-@Serializable
-data class MypageResponse(val message: String)
-@Serializable
-data class PostRequest(val title: String, val content: String)
 
 fun Route.authRoutes() {
 
@@ -59,12 +54,36 @@ fun Route.authRoutes() {
             }
 
             val post = call.receive<PostRequest>()
-            val success = UserRepository.createPost(userId, post.title, post.content)
+            val success = UserRepository.createPost(userId, post.content, post.picture, post.locate)
             if (success) {
                 call.respond(HttpStatusCode.Created)
             } else {
                 call.respond(HttpStatusCode.InternalServerError, "게시글 저장 실패")
             }
+        }
+
+        get("/posts") {
+            val principal = call.principal<JWTPrincipal>()
+            if (principal == null) {
+                call.respond(HttpStatusCode.Unauthorized)
+                return@get
+            }
+
+            val posts = UserRepository.getAllPosts()
+            call.respond(posts)
+        }
+
+        get("/posts/mypost") {
+            val principal = call.principal<JWTPrincipal>()
+            val userId = principal?.getClaim("userId", String::class)
+
+            if (userId == null) {
+                call.respond(HttpStatusCode.Unauthorized)
+                return@get
+            }
+
+            val posts = UserRepository.getUserPosts(userId)
+            call.respond(posts)
         }
     }
 }
