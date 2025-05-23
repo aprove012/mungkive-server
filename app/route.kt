@@ -1,4 +1,3 @@
-package com.example.server
 
 import com.example.server.server.AuthRequest
 import com.example.server.server.AuthResponse
@@ -11,7 +10,9 @@ import io.ktor.server.response.*
 import io.ktor.http.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.JWTPrincipal
-import kotlinx.serialization.Serializable
+import java.io.File
+import java.util.Base64
+import java.util.UUID
 
 fun Route.authRoutes() {
 
@@ -37,6 +38,17 @@ fun Route.authRoutes() {
         }
     }
 
+    fun saveBase64Image(base64Data: String): String {
+        val decodedBytes = Base64.getDecoder().decode(base64Data)
+        val fileName = "${UUID.randomUUID()}.jpg"
+        val filePath = "uploads/$fileName"
+        File(filePath).apply {
+            parentFile.mkdirs()
+            writeBytes(decodedBytes)
+        }
+        return filePath
+    }
+
     authenticate("auth-jwt") {
         get("/mypage") {
             val principal = call.principal<JWTPrincipal>()
@@ -54,7 +66,9 @@ fun Route.authRoutes() {
             }
 
             val post = call.receive<PostRequest>()
-            val success = UserRepository.createPost(userId, post.content, post.picture, post.locate)
+            val imagePath = saveBase64Image(post.picture)
+
+            val success = UserRepository.createPost(userId, post.content, imagePath, post.locate)
             if (success) {
                 call.respond(HttpStatusCode.Created)
             } else {

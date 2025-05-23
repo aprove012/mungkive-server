@@ -8,6 +8,8 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
+import io.ktor.server.http.content.*
+import java.io.File
 
 fun main() {
     embeddedServer(Netty, host = "0.0.0.0", port = 8080, module = Application::module).start(wait = true)
@@ -28,5 +30,7 @@ fun Application.module() {
 
     routing {
         authRoutes()
+
+        staticFiles("/uploads", File("uploads"))
     }
 }
