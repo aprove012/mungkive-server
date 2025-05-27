@@ -1,8 +1,3 @@
-
-import com.example.server.server.AuthRequest
-import com.example.server.server.AuthResponse
-import com.example.server.server.MypageResponse
-import com.example.server.server.PostRequest
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.ktor.server.request.*
@@ -13,6 +8,17 @@ import io.ktor.server.auth.jwt.JWTPrincipal
 import java.io.File
 import java.util.Base64
 import java.util.UUID
+
+fun saveBase64Image(base64Data: String): String {
+    val decodedBytes = Base64.getDecoder().decode(base64Data)
+    val fileName = "${UUID.randomUUID()}.jpg"
+    val filePath = "uploads/$fileName"
+    File(filePath).apply {
+        parentFile.mkdirs()
+        writeBytes(decodedBytes)
+    }
+    return filePath
+}
 
 fun Route.authRoutes() {
 
@@ -38,23 +44,42 @@ fun Route.authRoutes() {
         }
     }
 
-    fun saveBase64Image(base64Data: String): String {
-        val decodedBytes = Base64.getDecoder().decode(base64Data)
-        val fileName = "${UUID.randomUUID()}.jpg"
-        val filePath = "uploads/$fileName"
-        File(filePath).apply {
-            parentFile.mkdirs()
-            writeBytes(decodedBytes)
-        }
-        return filePath
-    }
-
     authenticate("auth-jwt") {
-        get("/mypage") {
+        get("/profile") {
             val principal = call.principal<JWTPrincipal>()
             val userId = principal?.getClaim("userId", String::class)
-            val response = MypageResponse("로그인한 사용자 ID: $userId")
-            call.respond(HttpStatusCode.OK, response)
+            if (userId == null) {
+                call.respond(HttpStatusCode.Unauthorized)
+                return@get
+            }
+
+            val profile = UserRepository.getProfile(userId)
+            if (profile != null) {
+                call.respond(HttpStatusCode.OK, profile)
+            } else {
+                call.respond(HttpStatusCode.NotFound, "프로필 정보가 없습니다.")
+            }
+        }
+
+        post("/profile/edit") {
+            val principal = call.principal<JWTPrincipal>()
+            val userId = principal?.getClaim("userId", String::class)
+            if (userId == null) {
+                call.respond(HttpStatusCode.Unauthorized)
+                return@post
+            }
+
+            val profile = call.receive<ProfileRequest>()
+            val picturePath = saveBase64Image(profile.profilePicture)
+
+            val success = UserRepository.updateProfile(
+                userId, profile.name, profile.breed, profile.age, picturePath)
+
+            if (success) {
+                call.respond(HttpStatusCode.OK, "프로필이 업데이트되었습니다.")
+            } else {
+                call.respond(HttpStatusCode.InternalServerError, "업데이트 실패")
+            }
         }
 
         post("/post") {
@@ -66,9 +91,11 @@ fun Route.authRoutes() {
             }
 
             val post = call.receive<PostRequest>()
+            val profile = UserRepository.getProfile(userId)
+            val userName = profile!!.name
             val imagePath = saveBase64Image(post.picture)
 
-            val success = UserRepository.createPost(userId, post.content, imagePath, post.locate)
+            val success = UserRepository.createPost(userId, userName, post.content, imagePath, post.locate, post.likes)
             if (success) {
                 call.respond(HttpStatusCode.Created)
             } else {
