@@ -1,5 +1,3 @@
-package com.example.server
-
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.PreparedStatement
@@ -27,9 +25,22 @@ object DatabaseFactory {
                 CREATE TABLE IF NOT EXISTS posts (
                     id       INTEGER PRIMARY KEY AUTOINCREMENT,
                     userId   TEXT NOT NULL,
+                    userName TEXT NOT NULL,
                     content  TEXT NOT NULL,
                     picture  TEXT NOT NULL,
-                    locate TEXT NOT NULL
+                    locate   TEXT NOT NULL,
+                );
+                """
+            )
+            stmt.executeUpdate(
+                """
+                    CREATE TABLE IF NOT EXISTS profile (
+                    userId TEXT PRIMARY KEY,
+                    name TEXT,
+                    breed TEXT,
+                    age INTEGER,
+                    profilePicture TEXT,
+                    FOREIGN KEY(userId) REFERENCES users(id)
                 );
                 """
             )
