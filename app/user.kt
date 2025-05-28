@@ -130,4 +130,78 @@ object UserRepository {
         }
         return rows > 0
     }
+
+    fun addComment(postId: Int, userId: String, content: String): Boolean {
+        val rows = DatabaseFactory.statement(
+            "INSERT INTO comments(postId, userId, content) VALUES (?, ?, ?)"
+        ) {
+            it.setInt(1, postId)
+            it.setString(2, userId)
+            it.setString(3, content)
+            it.executeUpdate()
+        }
+        return rows == 1
+    }
+
+    fun getCommentsForPost(postId: Int): List<CommentResponse> {
+        return DatabaseFactory.statement(
+            "SELECT * FROM comments WHERE postId = ? ORDER BY created ASC"
+        ) { stmt ->
+            stmt.setInt(1, postId)
+            val rs = stmt.executeQuery()
+            val result = mutableListOf<CommentResponse>()
+            while (rs.next()) {
+                result.add(
+                    CommentResponse(
+                        id = rs.getInt("id"),
+                        postId = rs.getInt("postId"),
+                        userId = rs.getString("userId"),
+                        content = rs.getString("content"),
+                        created = rs.getString("created")
+                    )
+                )
+            }
+            result
+        }
+    }
+
+    fun updateLikes(postId: Int, increment: Int): Boolean {
+        val rows = DatabaseFactory.statement(
+            """
+                UPDATE posts
+                SET likes = CASE
+                WHEN likes + ? < 0 THEN 0
+                ELSE likes + ?
+                END
+                WHERE id = ?
+            """
+        ) {
+            it.setInt(1, increment)
+            it.setInt(2, increment)
+            it.setInt(3, postId)
+            it.executeUpdate()
+        }
+        return rows == 1
+    }
+
+
+    fun deletePostAndComments(postId: Int, userId: String): Boolean {
+        return DatabaseFactory.statement(
+            """
+        DELETE FROM comments WHERE postId = ?;
+        DELETE FROM posts WHERE id = ? AND userId = ?;
+        """
+        ) { stmt ->
+            // (댓글 삭제)
+            stmt.setInt(1, postId)
+            stmt.addBatch()
+            // (게시글 삭제)
+            stmt.setInt(1, postId)
+            stmt.setString(2, userId)
+            stmt.addBatch()
+
+            val results = stmt.executeBatch()
+            results.all { it >= 0 }
+        }
+    }
 }
