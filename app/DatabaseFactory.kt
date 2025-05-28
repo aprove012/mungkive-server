@@ -29,6 +29,20 @@ object DatabaseFactory {
                     content  TEXT NOT NULL,
                     picture  TEXT NOT NULL,
                     locate   TEXT NOT NULL,
+                    likes     INTEGER NOT NULL DEFAULT 0
+                );
+                """
+            )
+            stmt.executeUpdate(
+                """
+                CREATE TABLE IF NOT EXISTS comments (
+                    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+                    postId   INTEGER NOT NULL,
+                    userId   TEXT NOT NULL,
+                    content  TEXT NOT NULL,
+                    created  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(postId) REFERENCES posts(id),
+                    FOREIGN KEY(userId) REFERENCES users(id)
                 );
                 """
             )
