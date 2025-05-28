@@ -80,5 +80,214 @@ Ktor 기반의 RESTful 백엔드 서버입니다.
   --
   main입니다.
   일단 이 코드들을 안드로이드 스튜디오에 넣어놓고 이것만 실행해도 서버가 동작합니다.
-
+  
 ### client branch에 클라이언트 예시 코드 있습니다.
+
+---
+
+# Postman API Spec
+
+## 회원가입
+
+- **Method**: POST
+- **URL**: `http://<서버 IP>:8080/register`
+- **Body (JSON)**:
+```json
+{
+  "id": "testuser",
+  "password": "1234"
+}
+```
+- **Response**:
+  - 201 Created: `{ "token": "<JWT Token>" }`
+  - 409 Conflict: "이미 존재하는 사용자입니다."
+
+---
+
+## 로그인
+
+- **Method**: POST
+- **URL**: `http://<서버 IP>:8080/login`
+- **Body (JSON)**:
+```json
+{
+  "id": "testuser",
+  "password": "1234"
+}
+```
+- **Response**:
+  - 200 OK: `{ "token": "<JWT Token>" }`
+  - 401 Unauthorized: "아이디 또는 비밀번호가 올바르지 않습니다."
+
+---
+
+## 프로필 생성 및 수정
+
+- **Method**: POST
+- **URL**: `http://<서버 IP>:8080/profile/edit`
+- **Headers**: Authorization: Bearer <JWT Token>
+- **Body (JSON)**:
+```json
+{
+  "name": "홍길동",
+  "breed": "푸들",
+  "age": 3,
+  "profilePicture": "Base64로로 인코딩된 이미지"
+}
+```
+- **Response**:
+  - 200 OK: "프로필이 업데이트되었습니다."
+  - 500 Internal Server Error: "업데이트 실패"
+
+---
+
+## 프로필 조회
+
+- **Method**: GET
+- **URL**: `http://<서버 IP>:8080/profile`
+- **Headers**: Authorization: Bearer <JWT Token>
+- **Response (예시)**:
+```json
+{
+  "userId": "testuser",
+  "name": "홍길동",
+  "breed": "푸들",
+  "age": 3,
+  "profilePicture": "uploads/abcd.jpg"
+}
+```
+
+---
+
+## 게시글 작성
+
+- **Method**: POST
+- **URL**: `http://<서버 IP>:8080/post`
+- **Headers**: Authorization: Bearer <JWT Token>
+- **Body (JSON)**:
+```json
+{
+  "content": "게시글 내용",
+  "picture": "Base64로로 인코딩된 이미지",
+  "locate": "서울",
+  "likes": 0
+}
+```
+- **Response**:
+  - 201 Created
+  - 500 Internal Server Error: "게시글 저장 실패"
+
+---
+
+## 전체 게시글 목록
+
+- **Method**: GET
+- **URL**: `http://<서버 IP>:8080/posts`
+- **Headers**: Authorization: Bearer <JWT Token>
+- **Response (예시)**:
+```json
+[
+  {
+    "id": 1,
+    "userId": "testuser",
+    "userName": "홍길동",
+    "content": "게시글 내용",
+    "picture": "uploads/abcd.jpg",
+    "locate": "서울",
+    "likes": 5
+  },
+  ...
+]
+```
+
+---
+
+## 내가 작성한 게시글 목록
+
+- **Method**: GET
+- **URL**: `http://<서버 IP>:8080/posts/mypost`
+- **Headers**: Authorization: Bearer <JWT Token>
+- **Response (예시)**:
+```json
+[
+    {
+        "id": 1,
+        "userId": "testuser",
+        "userName": "홍길동",
+        "content": "게시글 내용",
+        "picture": "uploads/31447e84-8124-4fa0-ba79-b9df3b3234a5.jpg",
+        "locate": "서울",
+        "likes": 0
+    },
+    ...
+    
+]
+```
+---
+
+## 댓글 작성
+
+- **Method**: POST
+- **URL**: `http://<서버 IP>:8080/post/{postId}/comment`
+- **Headers**: Authorization: Bearer <JWT Token>
+- **Body (JSON)**:
+```json
+{
+  "content": "댓글 내용"
+}
+```
+- **Response**:
+  - 201 Created: "댓글이 추가되었습니다."
+  - 400 Bad Request: "댓글 내용을 입력해주세요."
+  - 500 Internal Server Error: "댓글 추가 실패"
+
+---
+
+## 게시글의 댓글 조회
+
+- **Method**: GET
+- **URL**: `http://<서버 IP>:8080/post/{postId}/comments`
+- **Headers**: Authorization: Bearer <JWT Token>
+- **Response (예시)**:
+```json
+[
+    {
+        "id": 1,
+        "postId": 2,
+        "userId": "testuser",
+        "content": "댓글 내용",
+        "created": "2025-05-28 07:30:03"
+    },
+    ...
+
+]
+```
+---
+
+## 게시글 좋아요 추가
+
+- **Method**: POST
+- **URL**: `http://<서버 IP>:8080/post/{postId}/like`
+- **Headers**: Authorization: Bearer <JWT Token>
+
+---
+
+## 게시글 좋아요 취소
+
+- **Method**: POST
+- **URL**: `http://<서버 IP>:8080/post/{postId}/unlike`
+- **Headers**: Authorization: Bearer <JWT Token>
+
+---
+
+## 게시글 삭제 (댓글도 함께 삭제됨)
+
+- **Method**: DELETE
+- **URL**: `http://<서버 IP>:8080/post/{postId}`
+- **Headers**: Authorization: Bearer <JWT Token>
+
+---
+
+
+
+
