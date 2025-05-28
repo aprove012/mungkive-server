@@ -34,5 +34,15 @@ data class PostResponse(
     val content: String,
     val picture: String,
     val locate: String,
+    val likes: Int
+)
+
+@Serializable
+data class CommentResponse(
+    val id: Int,
+    val postId: Int,
+    val userId: String,
+    val content: String,
+    val created: String
 )
 

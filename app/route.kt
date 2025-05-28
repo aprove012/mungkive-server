@@ -126,5 +126,116 @@ fun Route.authRoutes() {
             val posts = UserRepository.getUserPosts(userId)
             call.respond(posts)
         }
+
+        post("/post/{id}/comment") {
+            val principal = call.principal<JWTPrincipal>()
+            val userId = principal?.getClaim("userId", String::class)
+            if (userId == null) {
+                call.respond(HttpStatusCode.Unauthorized)
+                return@post
+            }
+
+            val postId = call.parameters["id"]?.toIntOrNull()
+            if (postId == null) {
+                call.respond(HttpStatusCode.BadRequest, "유효하지 않은 게시글 ID입니다.")
+                return@post
+            }
+
+            val commentRequest = call.receive<Map<String, String>>() // {"content": "댓글 내용"}
+            val content = commentRequest["content"] ?: ""
+
+            if (content.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, "댓글 내용을 입력해주세요.")
+                return@post
+            }
+
+            val success = UserRepository.addComment(postId, userId, content)
+            if (success) {
+                call.respond(HttpStatusCode.Created, "댓글이 추가되었습니다.")
+            } else {
+                call.respond(HttpStatusCode.InternalServerError, "댓글 추가 실패")
+            }
+        }
+
+        get("/post/{id}/comments") {
+            val principal = call.principal<JWTPrincipal>()
+            if (principal == null) {
+                call.respond(HttpStatusCode.Unauthorized)
+                return@get
+            }
+
+            val postId = call.parameters["id"]?.toIntOrNull()
+            if (postId == null) {
+                call.respond(HttpStatusCode.BadRequest, "유효하지 않은 게시글 ID입니다.")
+                return@get
+            }
+
+            val comments = UserRepository.getCommentsForPost(postId)
+            call.respond(comments)
+        }
+
+        post("/post/{id}/like") {
+            val principal = call.principal<JWTPrincipal>()
+            if (principal == null) {
+                call.respond(HttpStatusCode.Unauthorized)
+                return@post
+            }
+
+            val postId = call.parameters["id"]?.toIntOrNull()
+            if (postId == null) {
+                call.respond(HttpStatusCode.BadRequest, "유효하지 않은 게시글 ID입니다.")
+                return@post
+            }
+
+            val success = UserRepository.updateLikes(postId, 1)
+            if (success) {
+                call.respond(HttpStatusCode.OK, "좋아요가 추가되었습니다.")
+            } else {
+                call.respond(HttpStatusCode.NotFound, "게시글을 찾을 수 없습니다.")
+            }
+        }
+
+        post("/post/{id}/unlike") {
+            val principal = call.principal<JWTPrincipal>()
+            if (principal == null) {
+                call.respond(HttpStatusCode.Unauthorized)
+                return@post
+            }
+
+            val postId = call.parameters["id"]?.toIntOrNull()
+            if (postId == null) {
+                call.respond(HttpStatusCode.BadRequest, "유효하지 않은 게시글 ID입니다.")
+                return@post
+            }
+
+            val success = UserRepository.updateLikes(postId, -1)
+            if (success) {
+                call.respond(HttpStatusCode.OK, "좋아요가 취소되었습니다.")
+            } else {
+                call.respond(HttpStatusCode.NotFound, "게시글을 찾을 수 없습니다.")
+            }
+        }
+
+        delete("/post/{id}") {
+            val principal = call.principal<JWTPrincipal>()
+            val userId = principal?.getClaim("userId", String::class)
+            if (userId == null) {
+                call.respond(HttpStatusCode.Unauthorized)
+                return@delete
+            }
+
+            val postId = call.parameters["id"]?.toIntOrNull()
+            if (postId == null) {
+                call.respond(HttpStatusCode.BadRequest, "유효하지 않은 게시글 ID입니다.")
+                return@delete
+            }
+
+            val success = UserRepository.deletePostAndComments(postId, userId)
+            if (success) {
+                call.respond(HttpStatusCode.OK, "게시글과 댓글이 삭제되었습니다.")
+            } else {
+                call.respond(HttpStatusCode.NotFound, "게시글을 찾을 수 없거나 권한이 없습니다.")
+            }
+        }
     }
 }
