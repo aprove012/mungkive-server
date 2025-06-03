@@ -10,6 +10,8 @@ import java.util.Base64
 import java.util.UUID
 
 fun saveBase64Image(base64Data: String): String {
+    if (base64Data.isBlank()) return ""  // 빈 문자열이면 "" 반환
+
     val decodedBytes = Base64.getDecoder().decode(base64Data)
     val fileName = "${UUID.randomUUID()}.jpg"
     val filePath = "uploads/$fileName"
@@ -73,7 +75,8 @@ fun Route.authRoutes() {
             val picturePath = saveBase64Image(profile.profilePicture)
 
             val success = UserRepository.updateProfile(
-                userId, profile.name, profile.breed, profile.age, picturePath)
+                userId, profile.name, profile.breed, profile.age, picturePath
+            )
 
             if (success) {
                 call.respond(HttpStatusCode.OK, "프로필이 업데이트되었습니다.")
@@ -93,9 +96,19 @@ fun Route.authRoutes() {
             val post = call.receive<PostRequest>()
             val profile = UserRepository.getProfile(userId)
             val userName = profile!!.name
+            val userPic = profile!!.profilePicture
             val imagePath = saveBase64Image(post.picture)
 
-            val success = UserRepository.createPost(userId, userName, post.content, imagePath, post.locate, post.likes)
+            val success = UserRepository.createPost(
+                userId,
+                userName,
+                userPic,
+                post.content,
+                imagePath,
+                post.locate,
+                post.locName,
+                post.likes
+            )
             if (success) {
                 call.respond(HttpStatusCode.Created)
             } else {
@@ -134,7 +147,7 @@ fun Route.authRoutes() {
                 call.respond(HttpStatusCode.Unauthorized)
                 return@post
             }
-
+            val userPic = UserRepository.getProfile(userId)!!.profilePicture
             val postId = call.parameters["id"]?.toIntOrNull()
             if (postId == null) {
                 call.respond(HttpStatusCode.BadRequest, "유효하지 않은 게시글 ID입니다.")
@@ -149,7 +162,7 @@ fun Route.authRoutes() {
                 return@post
             }
 
-            val success = UserRepository.addComment(postId, userId, content)
+            val success = UserRepository.addComment(postId, userId, userPic, content)
             if (success) {
                 call.respond(HttpStatusCode.Created, "댓글이 추가되었습니다.")
             } else {
