@@ -164,12 +164,15 @@ Ktor 기반의 RESTful 백엔드 서버입니다.
 - **Method**: POST
 - **URL**: `http://<서버 IP>:8080/post`
 - **Headers**: Authorization: Bearer <JWT Token>
+- **userPic**: 사용자 프로필 사진
+- **locName**: locate의 주소를 통해 텍스트화 된 위치
 - **Body (JSON)**:
 ```json
 {
   "content": "게시글 내용",
   "picture": "Base64로로 인코딩된 이미지",
-  "locate": "서울",
+  "locate": "126° 59' 00\"",
+  "locName": "광진구",
   "likes": 0
 }
 ```
@@ -191,9 +194,11 @@ Ktor 기반의 RESTful 백엔드 서버입니다.
     "id": 1,
     "userId": "testuser",
     "userName": "홍길동",
+    "userPic": "uploads/userPic.jpg",
     "content": "게시글 내용",
     "picture": "uploads/abcd.jpg",
-    "locate": "서울",
+    "locate": "126° 59' 00\"",
+    "locName": "서울"
     "likes": 5
   },
   ...
@@ -214,9 +219,11 @@ Ktor 기반의 RESTful 백엔드 서버입니다.
         "id": 1,
         "userId": "testuser",
         "userName": "홍길동",
+        "userPic": "uploads/userPic.jpg",
         "content": "게시글 내용",
         "picture": "uploads/31447e84-8124-4fa0-ba79-b9df3b3234a5.jpg",
-        "locate": "서울",
+        "locate": "126° 59' 00\"",
+        "locName": "서울",
         "likes": 0
     },
     ...
@@ -248,6 +255,7 @@ Ktor 기반의 RESTful 백엔드 서버입니다.
 - **Method**: GET
 - **URL**: `http://<서버 IP>:8080/post/{postId}/comments`
 - **Headers**: Authorization: Bearer <JWT Token>
+- **userPic**: 사용자 프로필 사진
 - **Response (예시)**:
 ```json
 [
@@ -255,6 +263,7 @@ Ktor 기반의 RESTful 백엔드 서버입니다.
         "id": 1,
         "postId": 2,
         "userId": "testuser",
+        "userPic": "uploads/31447e84-8124-4fa0-ba79-b9df3b3234a5.jpg",
         "content": "댓글 내용",
         "created": "2025-05-28 07:30:03"
     },
