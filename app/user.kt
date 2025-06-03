@@ -33,16 +33,28 @@ object UserRepository {
             it.executeQuery().next()
         }
 
-    fun createPost(userId: String, userName: String, content: String, picture: String, locate:String, likes:Int): Boolean {
+    fun createPost(
+        userId: String,
+        userName: String,
+        userPic: String,
+        content: String,
+        picture: String,
+        locate: String,
+        locName: String,
+        likes: Int
+    ): Boolean {
         val rows = DatabaseFactory.statement(
-            "INSERT INTO posts(userId, userName, content, picture, locate, likes) VALUES (?, ?, ?, ?, ?, ?)"
+            "INSERT INTO posts(userId, userName, userPic, content, picture, locate, locName, likes) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
         ) {
             it.setString(1, userId)
             it.setString(2, userName)
-            it.setString(3, content)
-            it.setString(4, picture)
-            it.setString(5, locate)
-            it.setInt(6, likes)
+            it.setString(3, userPic)
+            it.setString(4, content)
+            it.setString(5, picture)
+            it.setString(6, locate)
+            it.setString(7, locName)
+            it.setInt(8, likes)
             it.executeUpdate()
         }
         return rows == 1
@@ -58,9 +70,11 @@ object UserRepository {
                         id = rs.getInt("id"),
                         userId = rs.getString("userId"),
                         userName = rs.getString("userName"),
+                        userPic = rs.getString("userPic"),
                         content = rs.getString("content"),
                         picture = rs.getString("picture"),
                         locate = rs.getString("locate"),
+                        locName = rs.getString("locName"),
                         likes = rs.getInt("likes")
                     )
                 )
@@ -80,9 +94,11 @@ object UserRepository {
                         id = rs.getInt("id"),
                         userId = rs.getString("userId"),
                         userName = rs.getString("userName"),
+                        userPic = rs.getString("userPic"),
                         content = rs.getString("content"),
                         picture = rs.getString("picture"),
                         locate = rs.getString("locate"),
+                        locName = rs.getString("locName"),
                         likes = rs.getInt("likes")
                     )
                 )
@@ -109,7 +125,13 @@ object UserRepository {
         }
     }
 
-    fun updateProfile(userId: String, name: String?, breed: String?, age: Int?, profilePicture: String?): Boolean {
+    fun updateProfile(
+        userId: String,
+        name: String?,
+        breed: String?,
+        age: Int?,
+        profilePicture: String?
+    ): Boolean {
         val rows = DatabaseFactory.statement(
             """
         INSERT INTO profile(userId, name, breed, age, profilePicture) 
@@ -131,13 +153,14 @@ object UserRepository {
         return rows > 0
     }
 
-    fun addComment(postId: Int, userId: String, content: String): Boolean {
+    fun addComment(postId: Int, userId: String, userPic: String, content: String): Boolean {
         val rows = DatabaseFactory.statement(
-            "INSERT INTO comments(postId, userId, content) VALUES (?, ?, ?)"
+            "INSERT INTO comments(postId, userId, userPic, content) VALUES (?, ?, ?, ?)"
         ) {
             it.setInt(1, postId)
             it.setString(2, userId)
-            it.setString(3, content)
+            it.setString(3, userPic)
+            it.setString(4, content)
             it.executeUpdate()
         }
         return rows == 1
@@ -156,6 +179,7 @@ object UserRepository {
                         id = rs.getInt("id"),
                         postId = rs.getInt("postId"),
                         userId = rs.getString("userId"),
+                        userPic = rs.getString("userPic"),
                         content = rs.getString("content"),
                         created = rs.getString("created")
                     )
