@@ -29,21 +29,23 @@ data class PostRequest(val content: String, val picture: String = "", val locate
 @Serializable
 data class PostResponse(
     val id: Int,
-    val userId: String,
-    val userName: String,
     val userPic: String,
+    val userName: String,
+    val userBreed: String,
     val content: String,
-    val picture: String = "",
     val locate: String,
     val locName: String,
-    val likes: Int
+    val picture: String = "",
+    val likes: Int,
+    val commentCount: Int,
+    val date: String
 )
 
 @Serializable
 data class CommentResponse(
     val id: Int,
     val postId: Int,
-    val userId: String,
+    val userName: String,
     val userPic: String,
     val content: String,
     val created: String
