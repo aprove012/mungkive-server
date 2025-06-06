@@ -35,47 +35,65 @@ object UserRepository {
 
     fun createPost(
         userId: String,
-        userName: String,
-        userPic: String,
         content: String,
-        picture: String,
+        picture: String = "",
         locate: String,
         locName: String,
-        likes: Int
+        likes: Int,
     ): Boolean {
         val rows = DatabaseFactory.statement(
-            "INSERT INTO posts(userId, userName, userPic, content, picture, locate, locName, likes) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+            "INSERT INTO posts(userId, content, picture, locate, locName, likes) " +
+                    "VALUES (?, ?, ?, ?, ?, ?)"
         ) {
             it.setString(1, userId)
-            it.setString(2, userName)
-            it.setString(3, userPic)
-            it.setString(4, content)
-            it.setString(5, picture)
-            it.setString(6, locate)
-            it.setString(7, locName)
-            it.setInt(8, likes)
+            it.setString(2, content)
+            it.setString(3, picture)
+            it.setString(4, locate)
+            it.setString(5, locName)
+            it.setInt(6, likes)
             it.executeUpdate()
         }
         return rows == 1
     }
 
     fun getAllPosts(): List<PostResponse> {
-        return DatabaseFactory.statement("SELECT * FROM posts") { stmt ->
+        return DatabaseFactory.statement("""
+                SELECT
+                    p.id,
+                    pr.name AS userName,
+                    pr.profilePicture AS userPic,
+                    pr.breed AS userBreed,
+                    p.content,
+                    p.picture,
+                    p.locate,
+                    p.locName,
+                    p.likes,
+                    (
+                        SELECT COUNT(*)
+                        FROM comments c
+                        WHERE c.postId = p.id
+                    ) AS commentCount,
+                    p.created
+                FROM posts p
+                JOIN profile pr ON p.userId = pr.userId
+                """
+        ) { stmt ->
             val rs = stmt.executeQuery()
             val result = mutableListOf<PostResponse>()
             while (rs.next()) {
                 result.add(
                     PostResponse(
                         id = rs.getInt("id"),
-                        userId = rs.getString("userId"),
-                        userName = rs.getString("userName"),
                         userPic = rs.getString("userPic"),
+                        userName = rs.getString("userName"),
+                        userBreed = rs.getString("userBreed"),
                         content = rs.getString("content"),
                         picture = rs.getString("picture"),
                         locate = rs.getString("locate"),
                         locName = rs.getString("locName"),
-                        likes = rs.getInt("likes")
+                        likes = rs.getInt("likes"),
+                        commentCount = rs.getInt("commentCount"),
+                        date = rs.getString("created")
                     )
                 )
             }
@@ -84,7 +102,28 @@ object UserRepository {
     }
 
     fun getUserPosts(userId: String): List<PostResponse> {
-        return DatabaseFactory.statement("SELECT * FROM posts WHERE userId = ?") { stmt ->
+        return DatabaseFactory.statement("""
+                SELECT
+                    p.id,
+                    pr.name AS userName,
+                    pr.profilePicture AS userPic,
+                    pr.breed as userBreed,
+                    p.content,
+                    p.picture,
+                    p.locate,
+                    p.locName,
+                    p.likes,
+                    (
+                        SELECT COUNT(*)
+                        FROM comments c
+                        WHERE c.postId = p.id
+                    ) AS commentCount,
+                    p.created
+                FROM posts p
+                JOIN profile pr ON p.userId = pr.userId
+                WHERE p.userId = ?
+                ORDER BY p.id DESC
+                """) { stmt ->
             stmt.setString(1, userId)
             val rs = stmt.executeQuery()
             val result = mutableListOf<PostResponse>()
@@ -92,14 +131,16 @@ object UserRepository {
                 result.add(
                     PostResponse(
                         id = rs.getInt("id"),
-                        userId = rs.getString("userId"),
-                        userName = rs.getString("userName"),
                         userPic = rs.getString("userPic"),
+                        userName = rs.getString("userName"),
+                        userBreed = rs.getString("userBreed"),
                         content = rs.getString("content"),
                         picture = rs.getString("picture"),
                         locate = rs.getString("locate"),
                         locName = rs.getString("locName"),
-                        likes = rs.getInt("likes")
+                        likes = rs.getInt("likes"),
+                        commentCount = rs.getInt("commentCount"),
+                        date = rs.getString("created")
                     )
                 )
             }
@@ -153,14 +194,13 @@ object UserRepository {
         return rows > 0
     }
 
-    fun addComment(postId: Int, userId: String, userPic: String, content: String): Boolean {
+    fun addComment(postId: Int, userId: String, content: String): Boolean {
         val rows = DatabaseFactory.statement(
-            "INSERT INTO comments(postId, userId, userPic, content) VALUES (?, ?, ?, ?)"
+            "INSERT INTO comments(postId, userId, content) VALUES (?, ?, ?)"
         ) {
             it.setInt(1, postId)
             it.setString(2, userId)
-            it.setString(3, userPic)
-            it.setString(4, content)
+            it.setString(3, content)
             it.executeUpdate()
         }
         return rows == 1
@@ -168,7 +208,19 @@ object UserRepository {
 
     fun getCommentsForPost(postId: Int): List<CommentResponse> {
         return DatabaseFactory.statement(
-            "SELECT * FROM comments WHERE postId = ? ORDER BY created ASC"
+            """
+                SELECT
+                    c.id,
+                    c.postId,
+                    pr.name AS userName,
+                    pr.profilePicture AS userPic,
+                    c.content,
+                    c.created
+                    FROM comments c
+                    JOIN profile pr ON c.userId = pr.userId
+                    WHERE c.postId = ?
+                    ORDER BY c.created ASC;
+                """
         ) { stmt ->
             stmt.setInt(1, postId)
             val rs = stmt.executeQuery()
@@ -178,7 +230,7 @@ object UserRepository {
                     CommentResponse(
                         id = rs.getInt("id"),
                         postId = rs.getInt("postId"),
-                        userId = rs.getString("userId"),
+                        userName = rs.getString("userName"),
                         userPic = rs.getString("userPic"),
                         content = rs.getString("content"),
                         created = rs.getString("created")
