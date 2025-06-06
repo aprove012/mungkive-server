@@ -25,13 +25,13 @@ object DatabaseFactory {
                 CREATE TABLE IF NOT EXISTS posts (
                     id       INTEGER PRIMARY KEY AUTOINCREMENT,
                     userId   TEXT NOT NULL,
-                    userName TEXT NOT NULL,
-                    userPic  TEXT NOT NULL,
                     content  TEXT NOT NULL,
-                    picture  TEXT NOT NULL,
                     locate   TEXT NOT NULL,
                     locName  TEXT NOT NULL,
-                    likes     INTEGER NOT NULL DEFAULT 0
+                    picture  TEXT NOT NULL,
+                    likes    INTEGER NOT NULL DEFAULT 0,
+                    created  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(userId) REFERENCES users(id)
                 );
                 """
             )
@@ -41,7 +41,6 @@ object DatabaseFactory {
                     id       INTEGER PRIMARY KEY AUTOINCREMENT,
                     postId   INTEGER NOT NULL,
                     userId   TEXT NOT NULL,
-                    userPic  TEXT NOT NULL,
                     content  TEXT NOT NULL,
                     created  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY(postId) REFERENCES posts(id),
