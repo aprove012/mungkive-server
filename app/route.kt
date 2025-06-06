@@ -10,16 +10,19 @@ import java.util.Base64
 import java.util.UUID
 
 fun saveBase64Image(base64Data: String): String {
-    if (base64Data.isBlank()) return ""  // 빈 문자열이면 "" 반환
-
-    val decodedBytes = Base64.getDecoder().decode(base64Data)
-    val fileName = "${UUID.randomUUID()}.jpg"
-    val filePath = "uploads/$fileName"
-    File(filePath).apply {
-        parentFile.mkdirs()
-        writeBytes(decodedBytes)
+    if (base64Data.isBlank()) return ""
+    return try {
+        val decodedBytes = Base64.getDecoder().decode(base64Data)
+        val fileName = "${UUID.randomUUID()}.jpg"
+        val filePath = "uploads/$fileName"
+        File(filePath).apply {
+            parentFile.mkdirs()
+            writeBytes(decodedBytes)
+        }
+        filePath
+    } catch (e: IllegalArgumentException) {
+        ""
     }
-    return filePath
 }
 
 fun Route.authRoutes() {
@@ -94,15 +97,10 @@ fun Route.authRoutes() {
             }
 
             val post = call.receive<PostRequest>()
-            val profile = UserRepository.getProfile(userId)
-            val userName = profile!!.name
-            val userPic = profile!!.profilePicture
             val imagePath = saveBase64Image(post.picture)
 
             val success = UserRepository.createPost(
                 userId,
-                userName,
-                userPic,
                 post.content,
                 imagePath,
                 post.locate,
@@ -147,7 +145,6 @@ fun Route.authRoutes() {
                 call.respond(HttpStatusCode.Unauthorized)
                 return@post
             }
-            val userPic = UserRepository.getProfile(userId)!!.profilePicture
             val postId = call.parameters["id"]?.toIntOrNull()
             if (postId == null) {
                 call.respond(HttpStatusCode.BadRequest, "유효하지 않은 게시글 ID입니다.")
@@ -162,7 +159,7 @@ fun Route.authRoutes() {
                 return@post
             }
 
-            val success = UserRepository.addComment(postId, userId, userPic, content)
+            val success = UserRepository.addComment(postId, userId, content)
             if (success) {
                 call.respond(HttpStatusCode.Created, "댓글이 추가되었습니다.")
             } else {
