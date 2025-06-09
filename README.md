@@ -4,6 +4,9 @@ Ktor 기반의 RESTful 백엔드 서버입니다.
 현재 GCP 환경에서 `.jar` 파일로 배포되어 실행 중입니다.  
 데이터베이스는 sqlite3 사용했습니다.  
 
+## 앱 레포지토리
+https://github.com/leehe228/mungkive-app
+
 ## 현재 구현 기능
 - 회원가입 (`/register`)
 - 로그인 (`/login`)
