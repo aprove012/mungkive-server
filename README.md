@@ -7,17 +7,22 @@ Ktor 기반의 RESTful 백엔드 서버입니다.
 ## 앱 레포지토리
 https://github.com/leehe228/mungkive-app
 
-## 현재 구현 기능
-- 회원가입 (`/register`)
-- 로그인 (`/login`)
-- 내 프로필 조회 (`/profile`)
-- 내 프로필 생성/수정 (`/profile/edit`)
-- 게시물 등록 (`/post`)
-- 게시물 가져오기 (`/posts`)
-- 내 게시물만 가져오기 (`/posts/mypost`)
-- 댓글 달기 (`/post/{id}/comment`)
-- 댓글 가져오기 (`/post/{id}/comments`)
-- 좋아요/싫어요 (`/post/{id}/(un)like`)
+## 구현 기능
+* 회원정보 관리
+  * 회원가입 (`/register`)  
+  * 로그인 (`/login`)  
+    * jwt 토큰 생성  
+  * 내 프로필 조회 (`/profile`)  
+  * 내 프로필 생성/수정 (`/profile/edit`)  
+ 
+* 게시물 관리
+  * 게시물 등록 (`/post`)
+  * 게시물 가져오기 (`/posts`)
+  * 내 게시물만 가져오기 (`/posts/mypost`)
+  * 댓글 달기 (`/post/{id}/comment`)
+  * 댓글 가져오기 (`/post/{id}/comments`)
+  * 좋아요/싫어요 (`/post/{id}/(un)like`)
+  * 삭제
 
 ## 코드 설명
 - Route.kt
