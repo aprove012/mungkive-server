@@ -1,5 +1,3 @@
-package com.example.server
-
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.server.auth.jwt.*
@@ -7,8 +5,8 @@ import java.util.*
 
 object JwtConfig {
     private const val secret = "5팀"
-    private const val issuer = "com.example.server"
-    private const val audience = "com.example.server.user"
+    private const val issuer = "모프"
+    private const val audience = "팀플"
     private const val expirationInMs = 36_000_00 * 10
 
     private val algorithm = Algorithm.HMAC256(secret)
