@@ -56,18 +56,13 @@ object UserRepository {
         return rows == 1
     }
 
-    fun getAllPosts(): List<PostResponse> {
-        return DatabaseFactory.statement("""
+    fun getAllPosts(userId: String): List<PostResponse> {
+        return DatabaseFactory.statement(
+            """
                 SELECT
-                    p.id,
-                    pr.name AS userName,
-                    pr.profilePicture AS userPic,
+                    p.id, pr.name AS userName, pr.profilePicture AS userPic,
                     pr.breed AS userBreed,
-                    p.content,
-                    p.picture,
-                    p.locate,
-                    p.locName,
-                    p.likes,
+                    p.content, p.picture, p.locate, p.locName, p.likes,
                     (
                         SELECT COUNT(*)
                         FROM comments c
@@ -93,7 +88,8 @@ object UserRepository {
                         locName = rs.getString("locName"),
                         likes = rs.getInt("likes"),
                         commentCount = rs.getInt("commentCount"),
-                        date = rs.getString("created")
+                        date = rs.getString("created"),
+                        isLiked = checkLikes(userId, rs.getInt("id"))
                     )
                 )
             }
@@ -102,7 +98,8 @@ object UserRepository {
     }
 
     fun getUserPosts(userId: String): List<PostResponse> {
-        return DatabaseFactory.statement("""
+        return DatabaseFactory.statement(
+            """
                 SELECT
                     p.id,
                     pr.name AS userName,
@@ -123,7 +120,8 @@ object UserRepository {
                 JOIN profile pr ON p.userId = pr.userId
                 WHERE p.userId = ?
                 ORDER BY p.id DESC
-                """) { stmt ->
+                """
+        ) { stmt ->
             stmt.setString(1, userId)
             val rs = stmt.executeQuery()
             val result = mutableListOf<PostResponse>()
@@ -140,7 +138,8 @@ object UserRepository {
                         locName = rs.getString("locName"),
                         likes = rs.getInt("likes"),
                         commentCount = rs.getInt("commentCount"),
-                        date = rs.getString("created")
+                        date = rs.getString("created"),
+                        isLiked = checkLikes(userId, rs.getInt("id"))
                     )
                 )
             }
@@ -249,7 +248,7 @@ object UserRepository {
                 WHEN likes + ? < 0 THEN 0
                 ELSE likes + ?
                 END
-                WHERE id = ?
+                WHERE id = ?;
             """
         ) {
             it.setInt(1, increment)
@@ -260,6 +259,36 @@ object UserRepository {
         return rows == 1
     }
 
+    fun saveLikes(userId: String, postId: Int): Boolean {
+        val rows = DatabaseFactory.statement(
+            """ INSERT INTO liked(userId, postId) VALUES (?, ?); """
+        ) {
+            it.setString(1, userId)
+            it.setInt(2, postId)
+            it.executeUpdate()
+        }
+        return rows == 1
+    }
+
+    fun checkLikes(userId: String, postId: Int): Boolean =
+        DatabaseFactory.statement(
+            """ SELECT * FROM liked WHERE userId = ? AND postId = ?; """
+        ) {
+            it.setString(1, userId)
+            it.setInt(2, postId)
+            it.executeQuery().next()
+        }
+
+    fun deleteLikes(userId: String, postId: Int): Boolean {
+        val rows = DatabaseFactory.statement(
+            """ DELETE FROM liked WHERE userId =? AND postId = ? """
+        ) {
+            it.setString(1, userId)
+            it.setInt(2, postId)
+            it.executeUpdate()
+        }
+        return rows == 1
+    }
 
     fun deletePostAndComments(postId: Int, userId: String): Boolean {
         return DatabaseFactory.statement(
