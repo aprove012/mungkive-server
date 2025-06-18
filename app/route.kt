@@ -34,7 +34,7 @@ fun Route.authRoutes() {
             val token = JwtConfig.generateToken(request.id)
             call.respond(HttpStatusCode.Created, AuthResponse(token))
         } else {
-            call.respond(HttpStatusCode.Conflict, "이미 존재하는 사용자입니다.")
+            call.respond(HttpStatusCode.Conflict, ApiResponse<String>("이미 존재하는 사용자입니다."))
         }
     }
 
@@ -45,7 +45,10 @@ fun Route.authRoutes() {
             val token = JwtConfig.generateToken(request.id)
             call.respond(HttpStatusCode.OK, AuthResponse(token))
         } else {
-            call.respond(HttpStatusCode.Unauthorized, "아이디 또는 비밀번호가 올바르지 않습니다.")
+            call.respond(
+                HttpStatusCode.Unauthorized,
+                ApiResponse<String>("아이디 또는 비밀번호가 올바르지 않습니다.")
+            )
         }
     }
 
@@ -54,7 +57,7 @@ fun Route.authRoutes() {
             val principal = call.principal<JWTPrincipal>()
             val userId = principal?.getClaim("userId", String::class)
             if (userId == null) {
-                call.respond(HttpStatusCode.Unauthorized)
+                call.respond(HttpStatusCode.Unauthorized, ApiResponse<String>("로그인 정보 없음"))
                 return@get
             }
 
@@ -62,18 +65,21 @@ fun Route.authRoutes() {
             if (profile != null) {
                 call.respond(HttpStatusCode.OK, profile)
             } else {
-                call.respond(HttpStatusCode.NotFound, "프로필 정보가 없습니다.")
+                call.respond(HttpStatusCode.NotFound, ApiResponse<String>("프로필 정보가 없습니다."))
             }
         }
 
         post("/profile/edit") {
             val principal = call.principal<JWTPrincipal>()
             val userId = principal?.getClaim("userId", String::class)
+            println(userId)
             if (userId == null) {
-                call.respond(HttpStatusCode.Unauthorized)
+                call.respond(
+                    HttpStatusCode.Unauthorized,
+                    ApiResponse<String>(message = "로그인 정보 없음")
+                )
                 return@post
             }
-
             val profile = call.receive<ProfileRequest>()
             val picturePath = saveBase64Image(profile.profilePicture)
 
@@ -82,9 +88,9 @@ fun Route.authRoutes() {
             )
 
             if (success) {
-                call.respond(HttpStatusCode.OK, "프로필이 업데이트되었습니다.")
+                call.respond(HttpStatusCode.OK, ApiResponse<String>("프로필이 업데이트되었습니다."))
             } else {
-                call.respond(HttpStatusCode.InternalServerError, "업데이트 실패")
+                call.respond(HttpStatusCode.InternalServerError, ApiResponse<String>("업데이트 실패"))
             }
         }
 
@@ -92,7 +98,10 @@ fun Route.authRoutes() {
             val principal = call.principal<JWTPrincipal>()
             val userId = principal?.getClaim("userId", String::class)
             if (userId == null) {
-                call.respond(HttpStatusCode.Unauthorized)
+                call.respond(
+                    HttpStatusCode.Unauthorized,
+                    ApiResponse<String>(message = "로그인 정보 없음")
+                )
                 return@post
             }
 
@@ -108,20 +117,24 @@ fun Route.authRoutes() {
                 post.likes
             )
             if (success) {
-                call.respond(HttpStatusCode.Created)
+                call.respond(HttpStatusCode.Created, ApiResponse<String>("게시글 등록 성공"))
             } else {
-                call.respond(HttpStatusCode.InternalServerError, "게시글 저장 실패")
+                call.respond(HttpStatusCode.InternalServerError, ApiResponse<String>("게시글 저장 실패"))
             }
         }
 
         get("/posts") {
             val principal = call.principal<JWTPrincipal>()
-            if (principal == null) {
-                call.respond(HttpStatusCode.Unauthorized)
+            val userId = principal?.getClaim("userId", String::class)
+
+            if (userId == null) {
+                call.respond(
+                    HttpStatusCode.Unauthorized,
+                    ApiResponse<String>(message = "로그인 정보 없음")
+                )
                 return@get
             }
-
-            val posts = UserRepository.getAllPosts()
+            val posts = UserRepository.getAllPosts(userId)
             call.respond(posts)
         }
 
@@ -130,7 +143,10 @@ fun Route.authRoutes() {
             val userId = principal?.getClaim("userId", String::class)
 
             if (userId == null) {
-                call.respond(HttpStatusCode.Unauthorized)
+                call.respond(
+                    HttpStatusCode.Unauthorized,
+                    ApiResponse<String>(message = "로그인 정보 없음")
+                )
                 return@get
             }
 
@@ -142,41 +158,47 @@ fun Route.authRoutes() {
             val principal = call.principal<JWTPrincipal>()
             val userId = principal?.getClaim("userId", String::class)
             if (userId == null) {
-                call.respond(HttpStatusCode.Unauthorized)
+                call.respond(
+                    HttpStatusCode.Unauthorized,
+                    ApiResponse<String>(message = "로그인 정보 없음")
+                )
                 return@post
             }
             val postId = call.parameters["id"]?.toIntOrNull()
             if (postId == null) {
-                call.respond(HttpStatusCode.BadRequest, "유효하지 않은 게시글 ID입니다.")
+                call.respond(HttpStatusCode.BadRequest, ApiResponse<String>("유효하지 않은 게시글 ID입니다."))
                 return@post
             }
 
-            val commentRequest = call.receive<Map<String, String>>() // {"content": "댓글 내용"}
+            val commentRequest = call.receive<Map<String, String>>()
             val content = commentRequest["content"] ?: ""
 
             if (content.isBlank()) {
-                call.respond(HttpStatusCode.BadRequest, "댓글 내용을 입력해주세요.")
+                call.respond(HttpStatusCode.BadRequest, ApiResponse<String>("댓글 내용을 입력해주세요."))
                 return@post
             }
 
             val success = UserRepository.addComment(postId, userId, content)
             if (success) {
-                call.respond(HttpStatusCode.Created, "댓글이 추가되었습니다.")
+                call.respond(HttpStatusCode.Created, ApiResponse<String>("댓글이 추가되었습니다."))
             } else {
-                call.respond(HttpStatusCode.InternalServerError, "댓글 추가 실패")
+                call.respond(HttpStatusCode.InternalServerError, ApiResponse<String>("댓글 추가 실패"))
             }
         }
 
         get("/post/{id}/comments") {
             val principal = call.principal<JWTPrincipal>()
             if (principal == null) {
-                call.respond(HttpStatusCode.Unauthorized)
+                call.respond(
+                    HttpStatusCode.Unauthorized,
+                    ApiResponse<String>(message = "로그인 정보 없음")
+                )
                 return@get
             }
 
             val postId = call.parameters["id"]?.toIntOrNull()
             if (postId == null) {
-                call.respond(HttpStatusCode.BadRequest, "유효하지 않은 게시글 ID입니다.")
+                call.respond(HttpStatusCode.BadRequest, ApiResponse<String>("유효하지 않은 게시글 ID입니다."))
                 return@get
             }
 
@@ -186,43 +208,56 @@ fun Route.authRoutes() {
 
         post("/post/{id}/like") {
             val principal = call.principal<JWTPrincipal>()
-            if (principal == null) {
-                call.respond(HttpStatusCode.Unauthorized)
+            val userId = principal?.getClaim("userId", String::class)
+            if (userId == null) {
+                call.respond(
+                    HttpStatusCode.Unauthorized,
+                    ApiResponse<String>(message = "로그인 정보 없음")
+                )
                 return@post
             }
 
             val postId = call.parameters["id"]?.toIntOrNull()
             if (postId == null) {
-                call.respond(HttpStatusCode.BadRequest, "유효하지 않은 게시글 ID입니다.")
+                call.respond(HttpStatusCode.BadRequest, ApiResponse<String>("유효하지 않은 게시글 ID입니다."))
                 return@post
             }
 
-            val success = UserRepository.updateLikes(postId, 1)
-            if (success) {
-                call.respond(HttpStatusCode.OK, "좋아요가 추가되었습니다.")
+
+            val success = UserRepository.checkLikes(userId, postId)
+            if (!success) {
+                UserRepository.updateLikes(postId, 1)
+                UserRepository.saveLikes(userId, postId)
+                call.respond(HttpStatusCode.OK, ApiResponse<String>("좋아요가 추가되었습니다."))
             } else {
-                call.respond(HttpStatusCode.NotFound, "게시글을 찾을 수 없습니다.")
+                call.respond(HttpStatusCode.NotFound, ApiResponse<String>("좋아요를 추가할 수 없습니다."))
             }
         }
 
         post("/post/{id}/unlike") {
             val principal = call.principal<JWTPrincipal>()
-            if (principal == null) {
-                call.respond(HttpStatusCode.Unauthorized)
+            val userId = principal?.getClaim("userId", String::class)
+            if (userId == null) {
+                call.respond(
+                    HttpStatusCode.Unauthorized,
+                    ApiResponse<String>(message = "로그인 정보 없음")
+                )
                 return@post
             }
 
             val postId = call.parameters["id"]?.toIntOrNull()
             if (postId == null) {
-                call.respond(HttpStatusCode.BadRequest, "유효하지 않은 게시글 ID입니다.")
+                call.respond(HttpStatusCode.BadRequest, ApiResponse<String>("유효하지 않은 게시글 ID입니다."))
                 return@post
             }
 
-            val success = UserRepository.updateLikes(postId, -1)
+            val success = UserRepository.checkLikes(userId, postId)
             if (success) {
-                call.respond(HttpStatusCode.OK, "좋아요가 취소되었습니다.")
+                UserRepository.updateLikes(postId, -1)
+                UserRepository.deleteLikes(userId, postId)
+                call.respond(HttpStatusCode.OK, ApiResponse<String>("좋아요가 취소되었습니다."))
             } else {
-                call.respond(HttpStatusCode.NotFound, "게시글을 찾을 수 없습니다.")
+                call.respond(HttpStatusCode.NotFound, ApiResponse<String>("좋아요를 취소할 수 없습니다"))
             }
         }
 
@@ -230,21 +265,27 @@ fun Route.authRoutes() {
             val principal = call.principal<JWTPrincipal>()
             val userId = principal?.getClaim("userId", String::class)
             if (userId == null) {
-                call.respond(HttpStatusCode.Unauthorized)
+                call.respond(
+                    HttpStatusCode.Unauthorized,
+                    ApiResponse<String>(message = "로그인 정보 없음")
+                )
                 return@delete
             }
 
             val postId = call.parameters["id"]?.toIntOrNull()
             if (postId == null) {
-                call.respond(HttpStatusCode.BadRequest, "유효하지 않은 게시글 ID입니다.")
+                call.respond(HttpStatusCode.BadRequest, ApiResponse<String>("유효하지 않은 게시글 ID입니다."))
                 return@delete
             }
 
             val success = UserRepository.deletePostAndComments(postId, userId)
             if (success) {
-                call.respond(HttpStatusCode.OK, "게시글과 댓글이 삭제되었습니다.")
+                call.respond(HttpStatusCode.OK, ApiResponse<String>("게시글과 댓글이 삭제되었습니다."))
             } else {
-                call.respond(HttpStatusCode.NotFound, "게시글을 찾을 수 없거나 권한이 없습니다.")
+                call.respond(
+                    HttpStatusCode.NotFound,
+                    ApiResponse<String>("게시글을 찾을 수 없거나 권한이 없습니다.")
+                )
             }
         }
     }
