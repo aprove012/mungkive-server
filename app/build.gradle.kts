@@ -6,7 +6,7 @@ plugins {
 }
 
 application {
-    mainClass.set("com.example.server.ApplicationKt")
+    mainClass.set("ApplicationKt")
 }
 
 dependencies {
@@ -16,6 +16,7 @@ dependencies {
     implementation("io.ktor:ktor-server-auth-jwt:2.3.7")
     implementation("io.ktor:ktor-server-content-negotiation:2.3.7")
     implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.7")
+    implementation("io.ktor:ktor-server-status-pages:2.3.7")
     implementation("com.auth0:java-jwt:4.4.0")
     implementation("org.xerial:sqlite-jdbc:3.45.3.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -25,16 +26,24 @@ dependencies {
 
 tasks.withType<Jar> {
     manifest {
-        attributes["Main-Class"] = "com.example.server.ApplicationKt"
+        attributes["Main-Class"] = "ApplicationKt"
     }
-
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     archiveFileName.set("server.jar")
 
     from({
         configurations.runtimeClasspath.get().filter { it.name.endsWith("jar") }.map { zipTree(it) }
     })
 }
-
+tasks.named<Zip>("distZip") {
+    dependsOn("shadowJar")
+}
+tasks.named<Tar>("distTar") {
+    dependsOn("shadowJar")
+}
+tasks.named<CreateStartScripts>("startScripts") {
+    dependsOn("shadowJar")
+}
 tasks.test {
     useJUnitPlatform()
 }
