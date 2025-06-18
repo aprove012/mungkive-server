@@ -60,6 +60,16 @@ object DatabaseFactory {
                 );
                 """
             )
+            stmt.executeUpdate(
+                """
+                    CREATE TABLE IF NOT EXISTS liked (
+                    userId TEXT,
+                    postId INT,
+                    FOREIGN KEY(postId) REFERENCES posts(id),
+                    FOREIGN KEY(userId) REFERENCES users(id)
+                );
+                """
+            )
         }
     }
 
