@@ -24,7 +24,13 @@ data class ProfileResponse(
 )
 
 @Serializable
-data class PostRequest(val content: String, val picture: String = "", val locate: String, val locName: String, val likes: Int)
+data class PostRequest(
+    val content: String,
+    val picture: String = "",
+    val locate: String,
+    val locName: String,
+    val likes: Int
+)
 
 @Serializable
 data class PostResponse(
@@ -38,7 +44,8 @@ data class PostResponse(
     val picture: String = "",
     val likes: Int,
     val commentCount: Int,
-    val date: String
+    val date: String,
+    val isLiked: Boolean
 )
 
 @Serializable
@@ -49,5 +56,10 @@ data class CommentResponse(
     val userPic: String,
     val content: String,
     val created: String
+)
+
+@Serializable
+data class ApiResponse<T>(
+    val message: String
 )
 
