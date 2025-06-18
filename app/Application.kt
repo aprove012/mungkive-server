@@ -1,5 +1,3 @@
-package com.example.server
-
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.application.*
@@ -27,7 +25,7 @@ fun Application.module() {
             JwtConfig.configureKtorJwt(this)
         }
     }
-
+    configureStatusPages()
     routing {
         authRoutes()
 
