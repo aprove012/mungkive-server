@@ -4,10 +4,11 @@ Ktor 기반의 RESTful 백엔드 서버입니다.
 현재 GCP 환경에서 `.jar` 파일로 배포되어 실행 중입니다.  
 데이터베이스는 sqlite3 사용했습니다.  
 
-Shadowjar 플러그인으로 jar파일 생성했습니다.
-'com.github.johnrengelman.shadow'
-dependencies { classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.1'}
-./gradlew clean shadowJar
+kt파일간 의존성을 지워서 안드로이드스튜디오에서 실행되지 않습니다.  
+Shadowjar 플러그인으로 jar파일 생성했습니다.  
+'com.github.johnrengelman.shadow'  
+dependencies { classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.1'}  
+./gradlew clean shadowJar  
 
 
 ## 앱 레포지토리
