@@ -290,23 +290,24 @@ object UserRepository {
         return rows == 1
     }
 
-    fun deletePostAndComments(postId: Int, userId: String): Boolean {
-        return DatabaseFactory.statement(
-            """
-        DELETE FROM comments WHERE postId = ?;
-        DELETE FROM posts WHERE id = ? AND userId = ?;
-        """
-        ) { stmt ->
-            // (댓글 삭제)
-            stmt.setInt(1, postId)
-            stmt.addBatch()
-            // (게시글 삭제)
-            stmt.setInt(1, postId)
-            stmt.setString(2, userId)
-            stmt.addBatch()
-
-            val results = stmt.executeBatch()
-            results.all { it >= 0 }
+    fun deletePost(postId: Int): Boolean {
+        val rows = DatabaseFactory.statement(
+            "DELETE FROM posts WHERE id = ?"
+        ) {
+            it.setInt(1, postId)
+            it.executeUpdate()
         }
+        return rows == 1
     }
+
+    fun deleteCommentsByPostId(postId: Int): Boolean {
+        val rows = DatabaseFactory.statement(
+            "DELETE FROM comments WHERE postId = ?"
+        ) {
+            it.setInt(1, postId)
+            it.executeUpdate()
+        }
+        return rows == 1
+    }
+
 }
